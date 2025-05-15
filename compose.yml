@@ -16,7 +16,7 @@ services:
     networks:
       - minionetwork
     volumes:
-      - shared-data:/data/shared
+      - shared_data:/data/shared
       #- 'minio_data:/data'
     environment:
       - MINIO_ROOT_USER=swre_user
