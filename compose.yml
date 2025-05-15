@@ -48,6 +48,9 @@ services:
     ports:
       - 8080:8080
   swre:
+    entrypoint: /bin/sh
+    command: -c 'mkdir -p /extract && tar -czf /extract/results.tar.gz /tests/*'
+    restart: "no"
     networks:
       - minionetwork
     volumes:

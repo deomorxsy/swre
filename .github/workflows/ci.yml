@@ -35,20 +35,22 @@ jobs:
           docker compose -f ./compose.yml --progress=plain build --build-arg tag=localhost:5000/postgres:latest postgres
           docker compose -f ./compose.yml --progress=plain build --build-arg tag=localhost:5000/swre:latest swre
 
-          docker push localhost:5000/swre:latest
-          docker push localhost:5000/minio:latest
-          docker push localhost:5000/postgres:latest
+          # docker push localhost:5000/swre:latest
+          # docker push localhost:5000/minio:latest
+          # docker push localhost:5000/postgres:latest
 
 
 
       - name: Retrieve artifact from docker image
         run: |
           . ./scripts/read_parquet.sh
-          docker run -it --name minio -d --entrypoint="/bin/sh" localhost:5000/minio:latest
-          docker run -it --name postgres -d --entrypoint="/bin/sh" localhost:5000/postgres:latest
+          # docker run -it --name minio -d --entrypoint="/bin/sh" localhost:5000/minio:latest
+          # docker run -it --name postgres -d --entrypoint="/bin/sh" localhost:5000/postgres:latest
 
           docker compose up -d minio
-          docker run -it --name swre -d --entrypoint="/bin/sh" localhost:5000/swre:latest -c 'mkdir -p /extract; tar -czf /extract/results.tar.gz /tests/*'
+          docker compose up postgres
+          docker compose run --rm --name swre --entrypoint /bin/sh swre -c 'mkdir -p /extract && tar -czf /extract/results.tar.gz /tests/*'
+          # docker run -it --name swre -d --entrypoint="/bin/sh" localhost:5000/swre:latest -c 'mkdir -p /extract; tar -czf /extract/results.tar.gz /tests/*'
           mkdir -pv ${{ github.workspace }}/artifacts/
           docker cp swre:/extract/results.tar.gz ${{ github.workspace }}/artifacts/
           echo done!!
