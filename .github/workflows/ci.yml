@@ -67,7 +67,10 @@ jobs:
 
 
           docker compose up -d swre
-          docker exec swre /bin/sh -c "/entrypoint.sh /app/shared/rp.py && cp ./dummy.parquet /app/shared/dummy.parquet"
+
+          DYNCONT=$(docker ps | grep swre | awk '{print $1}')
+
+          docker exec "$DYNCONT" /bin/sh -c "/entrypoint.sh /app/shared/rp.py && cp ./dummy.parquet /app/shared/dummy.parquet"
 
           docker compose up -d minio
           docker compose up postgres
@@ -83,10 +86,10 @@ jobs:
           mc cp /data/shared/dummy.parquet localminio/swre_bucket/
           '
 
-          docker exec swre /bin/sh -c 'mkdir -p /extract && tar -czf /extract/results.tar.gz /tests/*'
+          docker exec "$DYNCONT" /bin/sh -c 'mkdir -p /extract && tar -czf /extract/results.tar.gz /tests/*'
           # docker run -it --name swre -d --entrypoint="/bin/sh" localhost:5000/swre:latest -c 'mkdir -p /extract; tar -czf /extract/results.tar.gz /tests/*'
           mkdir -pv ${{ github.workspace }}/artifacts/
-          docker cp swre:/extract/results.tar.gz ${{ github.workspace }}/artifacts/
+          docker cp "$DYNCONT":/extract/results.tar.gz ${{ github.workspace }}/artifacts/
           echo done!!
 
       - name: Archive the build artifact
