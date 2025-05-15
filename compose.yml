@@ -1,0 +1,76 @@
+volumes:
+  shared_data:
+  # swre: {}
+  # minio_data:
+    driver: local
+networks:
+  minionetwork:
+    driver: bridge
+
+services:
+  minio:
+    image: docker.io/bitnami/minio:2022
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    networks:
+      - minionetwork
+    volumes:
+      - shared-data:/data/shared
+      #- 'minio_data:/data'
+    environment:
+      - MINIO_ROOT_USER=swre_user
+      - MINIO_ROOT_PASSWORD=swre_passwd
+      - MINIO_DEFAULT_BUCKETS=swre_bucket
+  postgres:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
+    # or set shared memory limit when deploy via swarm stack
+    #volumes:
+    #  - type: tmpfs
+    #    target: /dev/shm
+    #    tmpfs:
+    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    networks:
+      - minionetwork
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: example
+
+  adminer:
+    image: adminer
+    restart: always
+    networks:
+      - minionetwork
+    ports:
+      - 8080:8080
+  swre:
+    networks:
+      - minionetwork
+    volumes:
+      - shared_data:/app/shared
+    environment:
+      # Git Hash (optional)
+      - GIT_HASH=${GIT_HASH:-dev}
+
+      # PostgreSQL Access
+      - PG_USER=postgres
+      - PG_PWD=example
+      - PG_HOST=postgres
+      - PG_PORT=5432
+      - PG_DB=postgres
+
+      # MinIO / S3 Access
+      - S3_ACCESS_KEY=swre_user
+      - S3_SECRET_KEY=swre_passwd
+      - S3_ENDPOINT_URL=http://minio:9000
+      - S3_BUCKET=swre_bucket
+
+    build:
+      context: "."
+      dockerfile: "./Dockerfile"
+      tags:
+        - "localhost:5000/swre:latest"

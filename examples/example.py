@@ -4,9 +4,9 @@ from spark_wrapper.spark_wrapper import SparkWrapper
 from dotenv import load_dotenv; load_dotenv()
 import os
 
-ak = os.getenv("AWS_ACCESS_KEY")
-sk = os.getenv("AWS_SECRET_KEY")
-ep = os.getenv("AWS_ENDPOINT_URL")
+ak = os.getenv("S3_ACCESS_KEY")
+sk = os.getenv("S3_SECRET_KEY")
+ep = os.getenv("S3_ENDPOINT_URL")
 
 pg_user = os.getenv("PG_USER")
 pg_pwd = os.getenv("PG_PWD")
@@ -17,11 +17,12 @@ pg_db = os.getenv("PG_DB")
 #%%
 sw = SparkWrapper(num_cors=1, memory_gb=2) \
     .set_s3_conf(ak, sk, ep) \
-    .set_pg_conf(pg_user, pg_pwd, pg_host, pg_port, pg_db) 
+    .set_pg_conf(pg_user, pg_pwd, pg_host, pg_port, pg_db)
 
 spark = sw.create_session()
 #%%
-df = spark.read.parquet('s3a://drivalake/sites/silver/whois/brazil/')
+
+df = spark.read.parquet('s3a://swre_bucket/dummy.parquet')
 df.show()
 #%%
 #Postgres

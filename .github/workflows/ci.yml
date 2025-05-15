@@ -1,0 +1,62 @@
+name: ci
+
+# This rule triggers when the workflow will run
+on:
+  push:
+    branches:
+      - 'sw-revamp'
+      - 'releases/**'
+  # run the workflow manually from Actions tab
+  workflow_dispatch:
+
+# jobs can run in sequence or parallel in a workflow
+jobs:
+  # This single job is called "build"
+  build:
+    # Specify the operating system for the runner job
+    runs-on: ubuntu-latest
+    env:
+      #git_hash: $(git rev-parse --short "$GITHUB_SHA")
+      git_hash: ${{ github.sha }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # the job gets runned into $GITHUB_WORKSPACE, that is the environment variable for the repo
+      - name: Access current repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Build docker image
+        run: |
+          docker run -d -p 5000:5000 --name registry registry:2.7
+
+          docker compose -f ./compose.yml --progress=plain build --build-arg tag=localhost:5000/minio:latest minio
+          docker compose -f ./compose.yml --progress=plain build --build-arg tag=localhost:5000/postgres:latest postgres
+          docker compose -f ./compose.yml --progress=plain build --build-arg tag=localhost:5000/swre:latest swre
+
+          docker push localhost:5000/swre:latest
+          docker push localhost:5000/minio:latest
+          docker push localhost:5000/postgres:latest
+
+
+
+      - name: Retrieve artifact from docker image
+        run: |
+          . ./scripts/read_parquet.sh
+          docker run -it --name minio -d --entrypoint="/bin/sh" localhost:5000/minio:latest
+          docker run -it --name postgres -d --entrypoint="/bin/sh" localhost:5000/postgres:latest
+
+          docker compose up -d minio
+          docker run -it --name swre -d --entrypoint="/bin/sh" localhost:5000/swre:latest -c 'mkdir -p /extract; tar -czf /extract/results.tar.gz /tests/*'
+          mkdir -pv ${{ github.workspace }}/artifacts/
+          docker cp swre:/extract/results.tar.gz ${{ github.workspace }}/artifacts/
+          echo done!!
+
+      - name: Archive the build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: ${{ github.workspace }}/artifacts/results.tar.gz
+
+
