@@ -1,5 +1,6 @@
 #!/bin/sh
 
+mkdir -p ./shared_data/
 (
 cat <<EOF
 #!/bin/python3
@@ -16,13 +17,14 @@ df = pd.DataFrame({
 df.to_parquet("./dummy.parquet", engine="pyarrow")
 
 EOF
-) > /app/shared/rp.py
+) > ./shared_data/rp.py
 
 
 docker compose up -d swre
 
 #docker cp ./examples/rp.py swre:/app/rp.py
-docker exec --entrypoint=/bin/sh -c "/entrypoint.sh /app/shared/rp.py && cp ./dummy.parquet /app/shared/dummy.parquet" swre
+
+docker exec swre /bin/sh -c "/entrypoint.sh /app/shared/rp.py && cp ./dummy.parquet /app/shared/dummy.parquet"
 
 docker compose up -d minio
 #docker cp swre:/dummy.parquet minio:/app/dummy.parquet
