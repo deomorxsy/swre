@@ -43,57 +43,57 @@ jobs:
 
       - name: Retrieve artifact from docker image
         run: |
-          #. ./scripts/read_parquet.sh
+          . ./scripts/read_parquet.sh
           # docker run -it --name minio -d --entrypoint="/bin/sh" localhost:5000/minio:latest
           # docker run -it --name postgres -d --entrypoint="/bin/sh" localhost:5000/postgres:latest
-          mkdir -p ./shared_data/
-          (
-          cat <<EOF
-          #!/bin/python3
+          # mkdir -p ./shared_data/
+          # (
+          # cat <<EOF
+          # #!/bin/python3
 
-          pip install pandas pyarrow
+          # pip install pandas pyarrow
 
-          import pandas as pd
+          # import pandas as pd
 
-          df = pd.DataFrame({
-          "name": ["Alice", "Bob", "Charlie"],
-          "age": [25, 30, 35]
-          })
+          # df = pd.DataFrame({
+          # "name": ["Alice", "Bob", "Charlie"],
+          # "age": [25, 30, 35]
+          # })
 
-          df.to_parquet("./dummy.parquet", engine="pyarrow")
+          # df.to_parquet("./dummy.parquet", engine="pyarrow")
 
-          EOF
-          ) > ./shared_data/rp.py
+          # EOF
+          # ) > ./shared_data/rp.py
 
 
-          docker compose up -d swre
+          # docker compose up -d swre
 
-          DYNCONT=$(docker compose ps | grep swre | awk '{print $1}')
+          # DYNCONT=$(docker compose ps | grep swre | awk '{print $1}')
 
-          docker exec "$DYNCONT" /bin/sh -c "/entrypoint.sh /app/shared/rp.py && cp ./dummy.parquet /app/shared/dummy.parquet & tail -f /dev/null"
+          # docker exec "$DYNCONT" /bin/sh -c "/entrypoint.sh /app/shared/rp.py && cp ./dummy.parquet /app/shared/dummy.parquet & tail -f /dev/null"
 
-          docker compose up -d minio
-          docker compose up postgres
+          # docker compose up -d minio
+          # docker compose up postgres
 
-          #docker cp swre:/dummy.parquet minio:/app/dummy.parquet
+          # #docker cp swre:/dummy.parquet minio:/app/dummy.parquet
 
-          docker run --rm \
-          --network container:minio \
-          -v shared_data:/data \
-          minio/mc -sh -c '
-          mc alias set localminio "http://localhost:9000" swre_user swre_passd && \
-          mc mb localminio/swre_bucket && \
-          mc cp /data/shared/dummy.parquet localminio/swre_bucket/
-          '
+          # docker run --rm \
+          # --network container:minio \
+          # -v shared_data:/data \
+          # minio/mc -sh -c '
+          # mc alias set localminio "http://localhost:9000" swre_user swre_passd && \
+          # mc mb localminio/swre_bucket && \
+          # mc cp /data/shared/dummy.parquet localminio/swre_bucket/
+          # '
 
-          docker exec "$DYNCONT" /bin/sh -c 'mkdir -p /extract && tar -czf /extract/results.tar.gz /tests/*'
-          # docker run -it --name swre -d --entrypoint="/bin/sh" localhost:5000/swre:latest -c 'mkdir -p /extract; tar -czf /extract/results.tar.gz /tests/*'
-          mkdir -pv ${{ github.workspace }}/artifacts/
-          docker cp "$DYNCONT":/extract/results.tar.gz ${{ github.workspace }}/artifacts/
+          # docker exec "$DYNCONT" /bin/sh -c 'mkdir -p /extract && tar -czf /extract/results.tar.gz /tests/*'
+          # # docker run -it --name swre -d --entrypoint="/bin/sh" localhost:5000/swre:latest -c 'mkdir -p /extract; tar -czf /extract/results.tar.gz /tests/*'
+          # mkdir -pv ${{ github.workspace }}/artifacts/
+          # docker cp "$DYNCONT":/extract/results.tar.gz ${{ github.workspace }}/artifacts/
 
-          docker stop "$DYNCONT" && docker rm "$DYNCONT"
-          docker compose ps
-          echo done!!
+          # docker stop "$DYNCONT" && docker rm "$DYNCONT"
+          # docker compose ps
+          # echo done!!
 
       - name: Archive the build artifact
         uses: actions/upload-artifact@v4
