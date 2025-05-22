@@ -70,7 +70,7 @@ jobs:
 
           DYNCONT=$(docker compose ps | grep swre | awk '{print $1}')
 
-          docker exec "$DYNCONT" /bin/sh -c "/entrypoint.sh /app/shared/rp.py && cp ./dummy.parquet /app/shared/dummy.parquet && tail -f /dev/null"
+          docker exec "$DYNCONT" /bin/sh -c "/entrypoint.sh /app/shared/rp.py && cp ./dummy.parquet /app/shared/dummy.parquet & tail -f /dev/null"
 
           docker compose up -d minio
           docker compose up postgres

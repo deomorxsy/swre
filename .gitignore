@@ -184,3 +184,7 @@ secrets.txt
 
 # pylint
 /imeigis-pylinter/
+
+# other
+
+shared_data/

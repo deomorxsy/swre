@@ -24,7 +24,9 @@ apk add apache-arrow apache-arrow-dev krb5-dev
 
 # krb5-dev is for the krb5 package,
 # needed by gssapi and leveraged by sparkmagic with livy
+EOF
 
+RUN <<EOF
 USER=spark
 
 addgroup -g 1000 -S "${USER}" && \
@@ -67,7 +69,7 @@ cat <<EOL
 
 if [ -f /home/spark/app/venv/bin/activate]; then
 source /home/spark/app/venv/bin/activate
-exec python "$@" 2>&1 >> /tests/output.txt && echo "done!!"
+exec python "\$@" 2>&1 >> /tests/output.txt && echo "done!!"
 
 else
     printf "\n|> venv activate script not found! Exiting now...\n\n"
@@ -78,13 +80,16 @@ EOL
 
 chmod +x /entrypoint.sh
 
+ls -allhtr /entrypoint.sh
 
 EOF
 
 
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["/app/examples/parquet-reader.py"]
+#ENTRYPOINT ["/entrypoint.sh"]
+#CMD ["/app/examples/parquet-reader.py"]
 
+ENTRYPOINT ["/bin/sh", "-c"]
+CMD ["echo", "hmm"]
 
 
 
