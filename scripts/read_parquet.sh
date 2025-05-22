@@ -35,6 +35,9 @@ docker compose up -d minio
 
 MINIOCONT=$(docker compose ps -a | grep minio | awk '{print $1}') && \
 
+
+printf "\n|> miniocont is: %s" "$MINIOCONT"
+
 docker run --rm \
 --network container:"$MINIOCONT" \
 -v shared_data:/data \
